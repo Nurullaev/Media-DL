@@ -1,0 +1,4 @@
+aiogram==3.20.0.post0
+python-dotenv==1.1.1
+Requests==2.32.4
+yt_dlp==2026.03.17
