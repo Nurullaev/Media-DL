@@ -57,10 +57,6 @@ class Links(Enum):
         "https://dai.ly/",
         # --- Twitch (только клипы, не VOD/стримы) ---
         "https://clips.twitch.tv/",
-        # --- Likee ---
-        "https://likee.video/",
-        "https://www.likee.video/",
-        "https://l.likee.video/",
         # --- Coub ---
         "https://coub.com/",
         # --- Streamable ---

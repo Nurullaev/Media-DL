@@ -12,7 +12,7 @@ async def start(message: types.Message) -> None:
         f"""
 Hello, @{message.from_user.username}! Just send the link to the video.
 
-📥 <b>Supported:</b> YouTube (+ Shorts), TikTok, Instagram Reels, X (Twitter), VK &amp; VK Клипы, OK.ru, Rutube, Дзен, Yappy, Reddit, Pinterest, Vimeo, Dailymotion, Twitch clips, Likee, Coub, Streamable.
+📥 <b>Supported:</b> YouTube (+ Shorts), TikTok, Instagram Reels, X (Twitter), VK &amp; VK Клипы, OK.ru, Rutube, Дзен, Yappy, Reddit, Pinterest, Vimeo, Dailymotion, Twitch clips, Coub, Streamable.
 
 ℹ️ <b>We don’t collect any data.</b>
 
