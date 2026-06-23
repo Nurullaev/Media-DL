@@ -86,6 +86,18 @@ class Downloader:
                 width, height = probed
             return filename, (width, height)
 
+    def _notify(self, text: str) -> None:
+        """Push a status message from the worker thread onto the event loop."""
+        async def _do():
+            try:
+                await self.message.edit_text(text)
+            except Exception:
+                pass
+        try:
+            self.loop.call_soon_threadsafe(asyncio.create_task, _do())
+        except Exception:
+            pass
+
     @staticmethod
     def _probe_dims(path: str):
         try:
@@ -111,13 +123,14 @@ class Downloader:
             return path
         if vcodec in ("h264", "avc1", ""):
             return path
+        self._notify(f"<code>{self.url}</code>\n\n🔄 Converting video for Telegram…")
         out = os.path.splitext(path)[0] + ".h264.mp4"
         try:
             subprocess.run(
                 ["ffmpeg", "-y", "-i", path,
                  # cap to 720p (long side <=1280) so re-encode is fast on weak CPUs
                  "-vf", "scale=1280:1280:force_original_aspect_ratio=decrease:force_divisible_by=2",
-                 "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23",
+                 "-c:v", "libx264", "-preset", "veryfast", "-crf", "25",
                  "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k",
                  "-movflags", "+faststart", out],
                 capture_output=True, timeout=1800, check=True)
