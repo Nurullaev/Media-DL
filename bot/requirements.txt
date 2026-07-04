@@ -1,4 +1,4 @@
 aiogram==3.20.0.post0
 python-dotenv==1.1.1
 Requests==2.32.4
-yt_dlp==2026.03.17
+yt-dlp[default]  # nightly channel via yt-dlp-update.timer; platform fixes (IG/YT) land here first
