@@ -63,7 +63,7 @@ class Downloader:
         opts = {
             # Prefer H.264/AAC (plays inline in Telegram; VP9/AV1 in mp4 shows as image+sound).
             # No height cap: it would wrongly throttle vertical Shorts (their height is ~1920).
-            "format": "bestvideo[vcodec^=avc1]+bestaudio[acodec^=mp4a]/bestvideo+bestaudio/best",
+            "format": "bestvideo[vcodec^=avc1]+bestaudio[acodec^=mp4a]/best[vcodec^=avc1]/best/bestvideo+bestaudio/best",
             "format_sort": ["vcodec:h264", "res:1080", "acodec:m4a"],
             "merge_output_format": "mp4",
             "remote_components": ["ejs:github"],
