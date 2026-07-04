@@ -38,6 +38,16 @@ def publish(user_id: int, filename: str) -> str:
     return f"{base_url}/{remote_name}"
 
 
+def extract_audio(video_path: str) -> str:
+    """Extract the audio track from a video as an mp3 for a separate audio message."""
+    audio_path = os.path.splitext(video_path)[0] + ".mp3"
+    subprocess.run(
+        ["ffmpeg", "-y", "-i", video_path, "-vn", "-c:a", "libmp3lame", "-q:a", "2", audio_path],
+        capture_output=True, timeout=600, check=True,
+    )
+    return audio_path
+
+
 @router.message(F.text.startswith(tuple(Links.STANDART.value)))
 async def handle_download(message: types.Message):
     # prepare
@@ -68,6 +78,14 @@ async def handle_download(message: types.Message):
                 await message.bot.send_message(chat_id=ADMIN_CHAT_ID, text=f"<code>{filebin_url}</code>")
             except Exception as e:
                 await msg.edit_text("😔 Upload failed. Please try again a bit later.")
+
+        # also send the audio track as a separate file (bonus — never fail the request on it)
+        try:
+            audio_path = await asyncio.to_thread(extract_audio, video_path)
+            title = os.path.splitext(os.path.basename(audio_path))[0][:64]
+            await message.answer_audio(types.FSInputFile(audio_path), title=title, caption=caption)
+        except Exception:
+            pass
 
         # log
         await message.bot.send_message(chat_id=ADMIN_CHAT_ID, text=f"✅ <code>{message.text}</code>")
