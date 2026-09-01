@@ -72,6 +72,11 @@ class Downloader:
             "progress_hooks": [self.progress_hook],
             "noplaylist": True,
         }
+        # Instagram rate-limits/blocks this datacenter IP; route it through WARP.
+        warp_ip = os.getenv("WARP_SOURCE_IP", "")
+        if warp_ip and "instagram.com" in url:
+            opts["source_address"] = warp_ip
+
         with yt_dlp.YoutubeDL(opts) as ydl:
             info = ydl.extract_info(url, download=True)
             # After merge/postprocessing the real path lives here; fall back to prepare_filename.
