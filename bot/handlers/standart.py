@@ -1,4 +1,5 @@
 import asyncio
+import html
 import os
 import random
 import uuid
@@ -53,7 +54,8 @@ async def handle_download(message: types.Message):
     # prepare
     await message.react([types.reaction_type_emoji.ReactionTypeEmoji(emoji="👀")])
     caption = f"<b><i><a href='https://t.me/NurVPN'>Nur VPN</a></i></b>"
-    msg = await message.answer(f"<code>{message.text}</code>\n\nYour download will start soon.")
+    u = html.escape(message.text)
+    msg = await message.answer(f"<code>{u}</code>\n\nYour download will start soon.")
 
     tmpdir = tempfile.mkdtemp(prefix="ytdl_")
     downloader = Downloader(message.text, msg, tmpdir)
@@ -63,15 +65,19 @@ async def handle_download(message: types.Message):
         try:
             video_path, (width, height) = await downloader.run()
         except Exception as e:
-            await message.bot.send_message(chat_id=ADMIN_CHAT_ID, text=f"❗ <code>{message.text}</code>\n\n{e}")
-            await msg.edit_text(f"<code>{message.text}</code>\n\n⚠️ An error occurred during download. This usually happens because the video is age-restricted (18+) or unavailable in the hosting country.")
+            err = str(e)
+            await message.bot.send_message(chat_id=ADMIN_CHAT_ID, text=f"❗ <code>{u}</code>\n\n{html.escape(err)}")
+            if "429" in err or "Too Many Requests" in err:
+                await msg.edit_text(f"<code>{u}</code>\n\n⏳ This platform is temporarily rate-limiting us. Please try again in a few minutes.")
+            else:
+                await msg.edit_text(f"<code>{u}</code>\n\n⚠️ An error occurred during download. This usually happens because the video is age-restricted (18+) or unavailable in the hosting country.")
             return
 
         # send
         try:
             await message.answer_video(types.FSInputFile(video_path), caption=caption, width=width, height=height)
         except Exception as e:
-            await msg.edit_text(f"<code>{message.text}</code>\n\n⏳ The video is too large for Telegram. Uploading to file host...")
+            await msg.edit_text(f"<code>{u}</code>\n\n⏳ The video is too large for Telegram. Uploading to file host...")
             try:
                 filebin_url = await asyncio.to_thread(publish, message.from_user.id, video_path)
                 await msg.edit_text(f"{filebin_url}\n\n⚠️ The link works for a single download.\n\n{caption}")
@@ -88,7 +94,7 @@ async def handle_download(message: types.Message):
             pass
 
         # log
-        await message.bot.send_message(chat_id=ADMIN_CHAT_ID, text=f"✅ <code>{message.text}</code>")
+        await message.bot.send_message(chat_id=ADMIN_CHAT_ID, text=f"✅ <code>{u}</code>")
         await message.delete()
         await msg.delete()
         success = True
