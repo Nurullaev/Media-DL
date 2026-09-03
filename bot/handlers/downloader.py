@@ -66,6 +66,8 @@ class Downloader:
             "format": "bestvideo[vcodec^=avc1]+bestaudio[acodec^=mp4a]/best[vcodec^=avc1]/best/bestvideo+bestaudio/best",
             "format_sort": ["vcodec:h264", "res:1080", "acodec:m4a"],
             "merge_output_format": "mp4",
+            "socket_timeout": 30,  # tolerate occasional slow Instagram/CDN responses (default 20s times out)
+            "retries": 3,
             "remote_components": ["ejs:github"],
             "paths": {"home": self.download_dir},
             "quiet": True,
