@@ -19,6 +19,10 @@ router = Router()
 load_dotenv()
 ADMIN_CHAT_ID = int(os.getenv("ADMIN_CHAT_ID", "0"))
 
+# Limit concurrent downloads: bursts of parallel requests make Instagram/YouTube
+# tarpit this IP (30s read timeouts) and pile up transcodes on a weak CPU.
+DOWNLOAD_SEMAPHORE = asyncio.Semaphore(2)
+
 
 def publish(user_id: int, filename: str) -> str:
     """Upload a too-large video to the dl host via scp and return its public URL.
@@ -61,9 +65,10 @@ async def handle_download(message: types.Message):
     downloader = Downloader(message.text, msg, tmpdir)
     success = False
     try:
-        # download
+        # download (throttled: at most 2 at once, so we don't burst the source)
         try:
-            video_path, (width, height) = await downloader.run()
+            async with DOWNLOAD_SEMAPHORE:
+                video_path, (width, height) = await downloader.run()
         except Exception as e:
             err = str(e)
             await message.bot.send_message(chat_id=ADMIN_CHAT_ID, text=f"❗ <code>{u}</code>\n\n{html.escape(err)}")
