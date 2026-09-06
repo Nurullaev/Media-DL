@@ -68,7 +68,16 @@ async def handle_download(message: types.Message):
         # download (throttled: at most 2 at once, so we don't burst the source)
         try:
             async with DOWNLOAD_SEMAPHORE:
-                video_path, (width, height) = await downloader.run()
+                # Retry: Instagram/CDN intermittently returns empty/timeout on a
+                # single request; a quick retry usually lands on a working moment.
+                for _attempt in range(3):
+                    try:
+                        video_path, (width, height) = await downloader.run()
+                        break
+                    except Exception:
+                        if _attempt == 2:
+                            raise
+                        await asyncio.sleep(2 * (_attempt + 1))
         except Exception as e:
             err = str(e)
             await message.bot.send_message(chat_id=ADMIN_CHAT_ID, text=f"❗ <code>{u}</code>\n\n{html.escape(err)}")
