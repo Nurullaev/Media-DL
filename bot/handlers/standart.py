@@ -36,10 +36,15 @@ def publish(user_id: int, filename: str) -> str:
     ext = os.path.splitext(filename)[1] or ".mp4"
     remote_name = f"{uuid.uuid4().hex}{ext}"
     remote_path = f"{remote_dir}/{remote_name}"
-    ssh_opts = ["-i", key, "-o", "StrictHostKeyChecking=accept-new", "-o", "ConnectTimeout=20"]
 
-    subprocess.run(["scp", "-q", *ssh_opts, filename, f"{user}@{host}:{remote_path}"], check=True, timeout=1800)
-    subprocess.run(["ssh", *ssh_opts, f"{user}@{host}", f"chmod 644 {remote_path}"], check=True, timeout=60)
+    if host in ("", "localhost", "127.0.0.1"):
+        # bot runs on the dl host itself — copy locally instead of scp
+        shutil.copy(filename, remote_path)
+        os.chmod(remote_path, 0o644)
+    else:
+        ssh_opts = ["-i", key, "-o", "StrictHostKeyChecking=accept-new", "-o", "ConnectTimeout=20"]
+        subprocess.run(["scp", "-q", *ssh_opts, filename, f"{user}@{host}:{remote_path}"], check=True, timeout=1800)
+        subprocess.run(["ssh", *ssh_opts, f"{user}@{host}", f"chmod 644 {remote_path}"], check=True, timeout=60)
     return f"{base_url}/{remote_name}"
 
 
